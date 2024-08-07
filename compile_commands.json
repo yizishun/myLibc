@@ -1,0 +1,46 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-O2",
+      "-Wall",
+      "-Werror",
+      "-I/Users/yizishun/miniMalloc/include",
+      "-fno-builtin",
+      "-I",
+      "/usr/local/include",
+      "-I",
+      ".",
+      "-o",
+      "/Users/yizishun/miniMalloc/builds/tb",
+      "/Users/yizishun/miniMalloc/src/main.c"
+    ],
+    "directory": "/Users/yizishun/miniMalloc",
+    "file": "/Users/yizishun/miniMalloc/src/main.c",
+    "output": "/Users/yizishun/miniMalloc/builds/tb"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-c",
+      "-g",
+      "-O2",
+      "-Wall",
+      "-Werror",
+      "-I/Users/yizishun/miniMalloc/include",
+      "-fno-builtin",
+      "-I",
+      "/usr/local/include",
+      "-I",
+      ".",
+      "-o",
+      "/Users/yizishun/miniMalloc/builds/tb",
+      "/Users/yizishun/miniMalloc/src/malloc.c"
+    ],
+    "directory": "/Users/yizishun/miniMalloc",
+    "file": "/Users/yizishun/miniMalloc/src/malloc.c",
+    "output": "/Users/yizishun/miniMalloc/builds/tb"
+  }
+]

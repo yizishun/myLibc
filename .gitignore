@@ -1,0 +1,9 @@
+*/*
+*
+!*/
+!src/*
+!include/*
+!.gitignore
+!Makefile
+!compile_commands.json
+!README.md
