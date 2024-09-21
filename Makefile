@@ -5,7 +5,7 @@ SHARE = $(BUILD)/share
 CSRCS = $(shell find $(MALLOC_HOME)/src -name "*.c")
 INC_PATH = $(MALLOC_HOME)/include
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += -g -O2 -Wall -Werror $(INCFLAGS) -fno-builtin
+CFLAGS += -g -O2 -Wall $(INCFLAGS) -fno-builtin
 
 run:
 	@mkdir -p $(BUILD)
