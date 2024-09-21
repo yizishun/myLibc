@@ -2,6 +2,10 @@
 #include <assert.h>
 #include <stdio.h>
 void *start = NULL;
+struct malloc_state main_arena;
+struct malloc_par mp_ = {
+  .top_size = TOP_CHUNK_SIZE
+};
 static void *sysmalloc (INTERNAL_SIZE_T nb, mstate av);
 static void malloc_init_state (mstate av);
 static void unlink_chunk (mchunkptr p);
@@ -12,8 +16,6 @@ void *malloc (size_t bytes){
 
   mchunkptr       victim;
   mchunkptr       remainder;
-  mchunkptr       fwd;
-  mchunkptr       bck;
 
   void *p;
   
@@ -71,6 +73,63 @@ void *malloc (size_t bytes){
 
 void free(void *mem)
 {
+  mchunkptr p;                 /* chunk corresponding to mem */
+  INTERNAL_SIZE_T size;        /* its size */
+  mchunkptr nextchunk;         /* next contiguous chunk */
+  INTERNAL_SIZE_T nextsize;    /* its size */
+  int nextinuse;               /* true if nextchunk is used */
+  INTERNAL_SIZE_T prevsize;    /* size of previous contiguous chunk */
+  mchunkptr bck;               /* misc temp for linking */
+  mchunkptr fwd;               /* misc temp for linking */
+  if(mem == NULL){
+    return;
+  }
+  p = mem2chunk (mem);
+  size = chunksize(p);
+  nextchunk = chunk_at_offset(p, size);
+  nextsize = chunksize(nextchunk);
+  /* consolidate backward */
+  if (!prev_inuse(p)) {
+    prevsize = prev_size (p);
+    size += prevsize;
+    p = chunk_at_offset(p, -((long) prevsize));
+    if (__glibc_unlikely (chunksize(p) != prevsize))
+      malloc_printerr ("corrupted size vs. prev_size while consolidating");
+    unlink_chunk (p);
+  }
+  if (nextchunk != main_arena.top) {
+    /* get and clear inuse bit */
+    nextinuse = inuse_bit_at_offset(nextchunk, nextsize);
+  
+      /* consolidate forward */
+      if (!nextinuse) {
+	      unlink_chunk (nextchunk);                                     
+	      size += nextsize;
+      } else
+	      clear_inuse_bit_at_offset(nextchunk, 0);
+      bck = bin_at(&main_arena, 1);
+      fwd = bck->fd;
+      //if (__glibc_unlikely (fwd->bk != bck))
+	//malloc_printerr ("free(): corrupted unsorted chunks");
+      p->fd = fwd;
+      p->bk = bck;
+      bck->fd = p;
+      fwd->bk = p;
+
+      set_head(p, size | PREV_INUSE);
+      set_foot(p, size);
+      //check_free_chunk(av, p);
+    }
+    /*
+      If the chunk borders the current high end of memory,
+      consolidate into top
+    */
+    else {
+      size += nextsize;
+      set_head(p, size | PREV_INUSE);
+      main_arena.top = p;
+      //check_chunk(av, p);
+    }
 }
 
 void *calloc(size_t count, size_t size) { TODO(); return NULL;}
@@ -81,16 +140,16 @@ void *aligned_alloc(size_t alignment, size_t size) { TODO(); return NULL;}
 static void
 unlink_chunk (mchunkptr p)
 {
-  if (chunksize (p) != prev_size (next_chunk (p)))                      //一，对分别对该chunk和上一个chunk的size和presize进行对比检测
+  if (chunksize (p) != prev_size (next_chunk (p)))
     malloc_printerr ("corrupted size vs. prev_size");
 
   mchunkptr fd = p->fd;                                                 
   mchunkptr bk = p->bk;
 
-  if (__builtin_expect (fd->bk != p || bk->fd != p, 0))                 //二，对p的双向链表指针进行检测
+  if (__builtin_expect (fd->bk != p || bk->fd != p, 0))
     malloc_printerr ("corrupted double-linked list");
 
-  fd->bk = bk;                                                          //三，解开p的fd和bk
+  fd->bk = bk;
   bk->fd = fd;
 }
 static void *

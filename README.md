@@ -1,4 +1,6 @@
-# MiniMalloc
+# Mylibc
+A libc implemented by myself
+## malloc/free
 **动机**：
 为了给新生出CTF题，但是直接上堆题有些困难
 于是打算重写malloc和free，让malloc和free的实现更简单一些

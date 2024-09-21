@@ -63,6 +63,13 @@ typedef struct malloc_chunk* mchunkptr;
 #define PREV_INUSE 0x1
 #define prev_inuse(p)       ((p)->mchunk_size & PREV_INUSE)
 #define SIZE_BITS (PREV_INUSE)
+/* check/set/clear inuse bits in known places */
+#define inuse_bit_at_offset(p, s)					      \
+  (((mchunkptr) (((char *) (p)) + (s)))->mchunk_size & PREV_INUSE)
+#define set_inuse_bit_at_offset(p, s)					      \
+  (((mchunkptr) (((char *) (p)) + (s)))->mchunk_size |= PREV_INUSE)
+#define clear_inuse_bit_at_offset(p, s)					      \
+  (((mchunkptr) (((char *) (p)) + (s)))->mchunk_size &= ~(PREV_INUSE))
 
 //get/set/clear inuse
 #define inuse(p)							      \
@@ -88,7 +95,6 @@ struct malloc_state
   mchunkptr bins[2];
 };
 typedef struct malloc_state* mstate;
-static struct malloc_state main_arena;
 #define bin_at(m, i) \
   (mbinptr) (((char *) &((m)->bins[((i) - 1) * 2]))			      \
              - offsetof (struct malloc_chunk, fd))
@@ -98,15 +104,12 @@ struct malloc_par
 {
   INTERNAL_SIZE_T top_size;
 };
-static struct malloc_par mp_ = {
-  .top_size = TOP_CHUNK_SIZE
-};
 
 //utils--------------------------------------------------------------------------------------------------------
 #define panic_on(cond, s) \
   ({ if (cond) { \
       printf("Libc : %s\n", s); \
-      exit(1); \
+      _exit(1); \
     } })
 
 #define malloc_printerr(s) panic_on(1, s)
