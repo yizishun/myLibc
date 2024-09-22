@@ -1,14 +1,16 @@
 #include <malloc.h>
 #include <assert.h>
 #include <stdio.h>
+const int MALLOC_ALIGN_MASK = 2 * (sizeof(INTERNAL_SIZE_T)) -1;
+const int SIZE_SZ = (sizeof(INTERNAL_SIZE_T));
 void *start = NULL;
 struct malloc_state main_arena;
 struct malloc_par mp_ = {
   .top_size = TOP_CHUNK_SIZE
 };
-static void *sysmalloc (INTERNAL_SIZE_T nb, mstate av);
-static void malloc_init_state (mstate av);
-static void unlink_chunk (mchunkptr p);
+static void *sysmalloc (INTERNAL_SIZE_T nb, mstate av) __attribute__((noinline));
+static void malloc_init_state (mstate av) __attribute__((noinline));
+static void unlink_chunk (mchunkptr p) __attribute__((noinline));
 void *malloc (size_t bytes){
   INTERNAL_SIZE_T nb;
   INTERNAL_SIZE_T size;
@@ -19,11 +21,11 @@ void *malloc (size_t bytes){
 
   void *p;
   
-  malloc_init_state(&main_arena);
+  nb = (bytes + SIZE_SZ + MALLOC_ALIGN_MASK) < MINSIZE ? MINSIZE : (bytes + SIZE_SZ + MALLOC_ALIGN_MASK) & (~MALLOC_ALIGN_MASK);
 
-  nb = request2size(bytes);
   //first request
   if(main_arena.top == NULL){
+    malloc_init_state(&main_arena);
     p = sysmalloc(nb, &main_arena);
     assert(p != NULL);
     assert(main_arena.top != NULL);
@@ -31,7 +33,7 @@ void *malloc (size_t bytes){
   }
 
   //unsorted bin
-  while ((victim = (mchunkptr)main_arena.bins[0]->bk) != main_arena.bins[0]) {
+  while ((victim = ((mchunkptr)bin_at(&main_arena, 1))->bk) != bin_at(&main_arena, 1)) {
     size = chunksize(victim);
     /* split */
     if(size >= nb){
@@ -163,6 +165,7 @@ sysmalloc (INTERNAL_SIZE_T nb, mstate av){
     p = sbrk(size);
     main_arena.top = chunk_at_offset(p, nb);
     set_head(p, nb | PREV_INUSE);
+    set_foot(p, nb);
     set_head(main_arena.top, mp_.top_size | PREV_INUSE);
     return chunk2mem(p);
   }

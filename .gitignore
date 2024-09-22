@@ -6,3 +6,4 @@
 !.gitignore
 !Makefile
 !README.md
+!cmd.gdb

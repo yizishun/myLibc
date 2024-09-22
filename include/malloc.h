@@ -18,7 +18,7 @@ void *aligned_alloc(size_t alignment, size_t size);
 
 //type-----------------------------------------------------------------------------------------------
 typedef size_t INTERNAL_SIZE_T;
-#define SIZE_SZ (sizeof(INTERNAL_SIZE_T))
+extern const int SIZE_SZ;
 
 //chunk------------------------------------------------------------------------------------------------
 struct malloc_chunk {
@@ -37,13 +37,13 @@ typedef struct malloc_chunk* mchunkptr;
 
 #define MIN_CHUNK_SIZE  (sizeof(struct malloc_chunk))
 #define MINSIZE MIN_CHUNK_SIZE
-#define MALLOC_ALIGN_MASK 2 * SIZE_SZ -1
+extern const int MALLOC_ALIGN_MASK;
 #define aligned_OK(m) (((unsigned long) (m) & MALLOC_ALIGN_MASK) == 0)
 
 #define request2size(req)                                         \
   (((req) + SIZE_SZ + MALLOC_ALIGN_MASK < MINSIZE)  ?             \
    MINSIZE :                                                      \
-   ((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & ~MALLOC_ALIGN_MASK)
+   (((req) + SIZE_SZ + MALLOC_ALIGN_MASK) & (~MALLOC_ALIGN_MASK)))
 
 //backend-----------------(size, prev_size, prev_inuse, inuse(out), chunk)
 //get size

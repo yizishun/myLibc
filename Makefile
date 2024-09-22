@@ -15,7 +15,7 @@ run:
 gdb:
 	@mkdir -p $(BUILD)
 	gcc $(CSRCS) $(CFLAGS) -o $(MALLOC_HOME)/builds/tb
-	gdb $(MALLOC_HOME)/builds/tb
+	gdb -x cmd.gdb $(MALLOC_HOME)/builds/tb
 
 clean:
 	rm -rf $(BUILD)
